@@ -1,0 +1,30 @@
+version: "3"
+
+services:
+  api:
+    build: ./api
+    volumes:
+      - ./api:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "8080:8080"
+    environment:
+      MONGO_DB: mongodb://mongo:27017/mongo-test
+      TOKEN_KEY: security_jhgfd
+    depends_on:
+      - mongo
+  app:
+    build: ./app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./app:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      PORT: 5173
+      API_URL: http://localhost:8080
+
+  mongo:
+    image: mongo
+    ports:
+      - "27018:27017"
