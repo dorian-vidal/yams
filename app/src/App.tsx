@@ -10,7 +10,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" exact element={<HomePage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/yams" element={<Yams />} />
         <Route path="/connexion" element={<ConnexionPage />} />
         <Route path="/results" element={<ResultsPage />} />

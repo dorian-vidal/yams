@@ -1,5 +1,5 @@
-import pastries from "./data/pastries.json";
-import PastryEntity from "./src/entity/Pastry.model";
+import pastries from "../../data/pastries.json";
+import PastryEntity from "../entity/Pastry.model";
 
 const exportPastries = async () => {
   const allPastries = await PastryEntity.find();

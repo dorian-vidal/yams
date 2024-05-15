@@ -12,8 +12,8 @@ const userSchema = new mongoose.Schema({
   attempts: {
     type: Number,
     default: 3,
-  }, // Nombre de tentatives restantes
-  winnings: [{ type: mongoose.Schema.Types.ObjectId, ref: "Pastry" }], // Références aux pâtisseries gagnées
+  },
+  winnings: [{ type: mongoose.Schema.Types.ObjectId, ref: "Pastry" }],
 });
 
 const User = mongoose.model("User", userSchema);

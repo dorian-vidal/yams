@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom"; // Importez useNavigate pour la redirection
+import { Link, useNavigate } from "react-router-dom";
 import "../App.css";
 
 function YamsPage() {
   const [dices, setDices] = useState([]);
   const [attempts, setAttempts] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isRolling, setIsRolling] = useState(false); // Ajout de l'état pour contrôler l'animation
   const [error, setError] = useState("");
   const [combination, setCombination] = useState("");
-  const [gameMessage, setGameMessage] = useState(""); // Pour stocker les messages du serveur
-  const navigate = useNavigate(); // Hook pour gérer la navigation
+  const [gameMessage, setGameMessage] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchGameData = async () => {
-      try {
-        const response = await axios.get("http://localhost:8080/me", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+    axios
+      .get("http://localhost:8080/me", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      .then((response) => {
         if (response.data.gameAvailable === false) {
-          // Si gameAvailable est false, redirigez vers la page de résultats
           navigate("/results");
         } else if (response.data.game) {
           setDices(response.data.game.dices);
@@ -31,22 +31,22 @@ function YamsPage() {
         } else {
           setGameMessage("Ready to start a new game.");
         }
-      } catch (error) {
+        setLoading(false);
+      })
+      .catch((error) => {
         setError("Failed to fetch game data. Please try again.");
         console.error(error);
-      }
-      setLoading(false);
-    };
+        setLoading(false);
+      });
+  }, [navigate]);
 
-    fetchGameData();
-  }, [navigate]); // Ajoutez navigate comme dépendance de useEffect pour garantir la réactivité
-
-  const launchDices = async () => {
+  const launchDices = () => {
     if (attempts > 0) {
       setLoading(true);
+      setIsRolling(true); // Commencer l'animation
       setError("");
-      try {
-        const response = await axios.post(
+      axios
+        .post(
           "http://localhost:8080/play",
           {},
           {
@@ -54,16 +54,22 @@ function YamsPage() {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
-        );
-        setDices(response.data.rolls);
-        setCombination(response.data.combination);
-        // setAttempts(attempts - 1);
-        setAttempts(response.data.attemptsLeft); // Mettre à jour le nombre de tentatives restantes avec la valeur du serveur
-      } catch (error) {
-        setError("Failed to launch dices. Please try again.");
-        console.error(error);
-      }
-      setLoading(false);
+        )
+        .then((response) => {
+          setDices(response.data.rolls);
+          setCombination(response.data.combination);
+          setAttempts(response.data.attemptsLeft);
+          setLoading(false);
+        })
+        .catch((error) => {
+          setError("Failed to launch dices. Please try again.");
+          console.error(error);
+          setLoading(false);
+        })
+        .finally(() => {
+          setIsRolling(false); // Arrêter l'animation
+          setLoading(false);
+        });
     }
   };
 
@@ -75,34 +81,31 @@ function YamsPage() {
       <h1>Yam's</h1>
 
       <p>{gameMessage}</p>
-      <p>
+      <h3>
         {combination
           ? `Combination: ${combination}`
           : "Roll the dices to see the combination"}
-      </p>
+      </h3>
 
       {dices.map((dice, index) => (
-        <Dice key={index} value={dice} />
+        <Dice key={index} value={dice} isRolling={isRolling} />
       ))}
 
       <div className="actions">
         <button onClick={launchDices} disabled={loading || attempts <= 0}>
           {loading ? "Launching..." : "Launch"}
         </button>
-        <p>Attempts remaining: {attempts}</p>
+        <h3>Attempts remaining: {attempts}</h3>
         {attempts <= 0 && <p>No more attempts left.</p>}
       </div>
-      <Link to="/">Back to Home</Link>
-      <br />
-      <br />
     </>
   );
 }
 
-function Dice(props) {
+function Dice({ value, isRolling }) {
   return (
     <div className="dice-container">
-      <div className="dice">{props.value}</div>
+      <div className={`dice ${isRolling ? "dice-rolling" : ""}`}>{value}</div>
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import HomePage from "./pages/HomePage.tsx";
 import Yams from "./pages/Yams.tsx";
-// import { Result } from "./route/Results/Result.tsx";
 import { AuthLayout } from "./components/AuthLayout.tsx";
 import { Layout } from "./components/Layout.tsx";
 import ConnexionPage from "./pages/ConnexionPage.tsx";
@@ -23,10 +22,6 @@ const router = createBrowserRouter([
         path: "/results",
         element: <ResultsPage />,
       },
-      // {
-      //   path: "/result",
-      //   element: <Result />,
-      // },
     ],
   },
   {

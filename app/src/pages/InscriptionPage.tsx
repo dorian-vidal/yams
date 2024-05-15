@@ -1,66 +1,62 @@
-import React, { useState, FormEvent } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
 import "../App.css";
 
 function InscriptionPage() {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
+  const handleRegister = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    try {
-      const response = await axios.post("http://localhost:8080/signup", {
+    axios
+      .post("http://localhost:8080/signup", {
         username: email,
         password: password,
+      })
+      .then((response) => {
+        console.log(response.data);
+        alert("Inscription réussie !");
+        navigate("/yams");
+      })
+      .catch((error) => {
+        console.error("Erreur d'inscription:", error.response?.data);
+        alert("Erreur d'inscription !");
       });
-
-      console.log(response.data);
-      alert("Inscription réussie !");
-      navigate("/yams");
-    } catch (error) {
-      console.error("Erreur d'inscription:");
-      alert("Erreur d'inscription !");
-    }
   };
 
   return (
     <form onSubmit={handleRegister}>
+      <h1>Inscription</h1>
       <div className="mb-3">
-        <label htmlFor="exampleInputEmail1" className="form-label">
-          Email address
+        <label htmlFor="emailInput" className="form-label">
+          Adresse email
         </label>
         <input
           type="email"
           className="form-control"
-          id="exampleInputEmail1"
+          id="emailInput"
           value={email}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setEmail(e.target.value)
-          }
+          onChange={(e) => setEmail(e.target.value)}
           aria-describedby="emailHelp"
         />
       </div>
       <div className="mb-3">
-        <label htmlFor="exampleInputPassword1" className="form-label">
-          Password
+        <label htmlFor="passwordInput" className="form-label">
+          Mot de passe
         </label>
         <input
           type="password"
           className="form-control"
-          id="exampleInputPassword1"
+          id="passwordInput"
           value={password}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setPassword(e.target.value)
-          }
+          onChange={(e) => setPassword(e.target.value)}
         />
       </div>
-
       <button type="submit" className="btn btn-primary">
-        Register
+        S'inscrire
       </button>
     </form>
   );

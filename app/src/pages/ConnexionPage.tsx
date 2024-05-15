@@ -62,12 +62,16 @@ function ConnexionPage() {
         Connexion
       </button>
       <br />
-      <p>
-        Si vous n'avez pas de compte, vous pouvez
-        <button onClick={handleGoToInscription} className="link-button">
+      <br />
+      <div>
+        <p>Si vous n'avez pas de compte, vous pouvez</p>
+        <button
+          onClick={handleGoToInscription}
+          className="link-button btn btn-primary"
+        >
           en créer un
         </button>
-      </p>
+      </div>
     </form>
   );
 }

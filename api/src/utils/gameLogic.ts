@@ -1,5 +1,5 @@
 export function rollDice(): number[] {
-  return [5, 5, 5, 5, 1]; // YAMS de 5
+  // return [5, 5, 5, 5, 1]; // YAMS de 5
   let rolls = [];
   for (let i = 0; i < 5; i++) {
     rolls.push(Math.floor(Math.random() * 6) + 1);
@@ -8,8 +8,7 @@ export function rollDice(): number[] {
 }
 
 export function checkCombination(rolls: number[]): string {
-  // Définir explicitement le type de counts pour autoriser des clés numériques
-  let counts: { [key: number]: number } = {}; // ou bien utiliser Record<number, number>
+  let counts: { [key: number]: number } = {};
   for (let roll of rolls) {
     counts[roll] = (counts[roll] || 0) + 1;
   }

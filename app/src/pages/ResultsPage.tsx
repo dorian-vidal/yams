@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 interface WinningInterface {
@@ -10,14 +10,14 @@ interface WinningInterface {
 interface ResultsResponseInterface {
   _id: string;
   userId: {
-    username: "dorian42@gmail.com";
+    username: string;
   };
   winnings: WinningInterface[];
   createdAt: Date;
 }
 
 function ResultsPage() {
-  const [results, setResults] = useState<ResultsResponseInterface[]>();
+  const [results, setResults] = useState<ResultsResponseInterface[]>([]);
 
   useEffect(() => {
     axios
@@ -28,27 +28,30 @@ function ResultsPage() {
       })
       .then((response) => {
         setResults(response.data);
-      });
+      })
+      .catch((error) => console.error("Error fetching results:", error));
   }, []);
 
   return (
-    <div>
+    <div className="results-container">
       <h1>Game Results</h1>
-      <ul>
-        {results ? (
-          results.map((result) => (
-            <li key={result._id}>
-              {result.userId.username} won
+      <div className="results-list">
+        {results.map((result) => (
+          <div key={result._id} className="result-card">
+            <div className="result-info">
+              <p className="result-user">{result.userId.username}</p>
+              <p className="result-date">
+                {new Date(result.createdAt).toLocaleDateString()}
+              </p>
+            </div>
+            <ul className="winnings-list">
               {result.winnings.map((winning) => (
-                <span key={winning._id}> {winning.name},</span>
+                <li key={winning._id}>{winning.name}</li>
               ))}
-              on {new Date(result.createdAt).toLocaleDateString()}
-            </li>
-          ))
-        ) : (
-          <></>
-        )}
-      </ul>
+            </ul>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

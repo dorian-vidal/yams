@@ -1,5 +1,6 @@
 import { ReactElement } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import Header from "./Header";
 
 export const AuthLayout = (props: {
   should_be_auth: boolean;
@@ -14,6 +15,8 @@ export const AuthLayout = (props: {
 
   return (
     <>
+      <Header />
+
       {isLogged() ? (
         <Outlet />
       ) : (

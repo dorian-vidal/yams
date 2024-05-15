@@ -2,9 +2,9 @@ import express, { Request, Response } from "express";
 import connectDb from "./src/config/database.config";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import authenticateToken from "./authenticateToken"; // Ajustez le chemin selon votre structure de projet
-import { rollDice, checkCombination } from "./gameLogic"; // Assurez-vous que le chemin est correct
-import exportPastries from "./exportPastries";
+import authenticateToken from "./src/middleware/authenticateToken";
+import { rollDice, checkCombination } from "./src/utils/gameLogic";
+import exportPastries from "./src/helpers/exportPastries";
 import PastryEntity from "./src/entity/Pastry.model";
 import cors from "cors";
 import Game from "./src/models/Game";
@@ -21,7 +21,6 @@ async function checkStockAvailability() {
   return totalAvailable > 0;
 }
 
-// Middleware pour parser le JSON dans les corps de requête
 app.use(express.json());
 app.use(cors());
 
@@ -30,7 +29,6 @@ app.get("/", async (req: Request, res: Response) => {
   res.send(users);
 });
 
-// Endpoint pour l'inscription
 app.post("/signup", async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
@@ -118,65 +116,8 @@ app.post("/login", async (req: Request, res: Response) => {
   }
 });
 
-// app.post("/play", authenticateToken, async (req: Request, res: Response) => {
-//   // const user = req.app.get("user"); // Récupérer l'utilisateur à partir du JWT
-//   const user = res.locals.user; // Modifié pour correspondre à la nouvelle façon de stocker l'utilisateur
-
-//   const userData = await User.findOne({ _id: user.user_id });
-
-//   if (!userData) {
-//     return res.status(404).send("User not found");
-//   }
-
-//   if (userData.attempts <= 0) {
-//     return res.status(400).send("No attempts left");
-//   }
-
-//   userData.attempts -= 1; // Décrémenter une tentative
-//   const rolls = rollDice();
-//   const combination = checkCombination(rolls);
-
-//   let winnings = 0;
-//   let wonPastriesIds = [];
-//   if (combination === "YAMS") winnings = 3;
-//   else if (combination === "CARRÉ") winnings = 2;
-//   else if (combination === "DOUBLE") winnings = 1;
-
-//   // Logique pour attribuer les pâtisseries ici
-//   if (winnings > 0) {
-//     const availablePastries = await PastryEntity.find({ stock: { $gt: 0 } });
-//     const wonPastries = [];
-
-//     for (let i = 0; i < winnings && availablePastries.length > i; i++) {
-//       const pastry = availablePastries[i];
-//       pastry.stock -= 1;
-//       await pastry.save();
-
-//       userData.winnings.push(pastry._id); // Ajoutez l'ID de la pâtisserie gagnée aux gains de l'utilisateur
-//       wonPastries.push(pastry); // Ajoutez la pâtisserie gagnée à la réponse
-//     }
-
-//     wonPastriesIds = wonPastries.map((p) => p._id);
-//     res.json({ rolls, combination, winnings: wonPastries.map((p) => p.name) });
-//   } else {
-//     res.json({ rolls, combination, winnings: "No winnings" });
-//   }
-
-//   const game = new Game({
-//     userId: res.locals.user.user_id,
-//     dices: rolls,
-//     combination,
-//     winnings: wonPastriesIds,
-//     attemptsLeft: userData.attempts,
-//     createdAt: new Date(),
-//   });
-
-//   await game.save();
-//   await userData.save();
-// });
-
 app.post("/play", authenticateToken, async (req: Request, res: Response) => {
-  const user = res.locals.user; // Récupérer l'utilisateur à partir du JWT
+  const user = res.locals.user;
 
   const userData = await User.findOne({ _id: user.user_id });
 
@@ -192,7 +133,7 @@ app.post("/play", authenticateToken, async (req: Request, res: Response) => {
   const combination = checkCombination(rolls);
 
   let winnings = 0;
-  let wonPastries = []; // Déclaration de la variable ici pour utilisation dans toute la portée de la fonction
+  let wonPastries = [];
   if (combination === "YAMS") winnings = 3;
   else if (combination === "CARRÉ") winnings = 2;
   else if (combination === "DOUBLE") winnings = 1;
@@ -201,7 +142,7 @@ app.post("/play", authenticateToken, async (req: Request, res: Response) => {
     const availablePastries = await PastryEntity.find({
       stock: { $gt: 0 },
     }).limit(winnings);
-    wonPastries = []; // Initialiser à nouveau pour être sûr
+    wonPastries = [];
 
     for (const pastry of availablePastries) {
       pastry.stock -= 1;
@@ -211,10 +152,10 @@ app.post("/play", authenticateToken, async (req: Request, res: Response) => {
       wonPastries.push(pastry);
     }
 
-    userData.attempts = 0; // Réinitialiser les tentatives si l'utilisateur gagne
+    userData.attempts = 0;
     await userData.save();
   } else {
-    userData.attempts -= 1; // Décrémenter une tentative seulement si l'utilisateur n'a pas gagné
+    userData.attempts -= 1;
     await userData.save();
   }
 
@@ -232,7 +173,7 @@ app.post("/play", authenticateToken, async (req: Request, res: Response) => {
   res.json({
     rolls: rolls,
     combination: combination,
-    winnings: wonPastries.map((p: any) => p.name), // Typage explicite si nécessaire
+    winnings: wonPastries.map((p: any) => p.name),
     attemptsLeft: userData.attempts,
   });
 });
@@ -290,7 +231,6 @@ app.post("/reset-stocks", async (req: Request, res: Response) => {
 app.get("/me", authenticateToken, async (req, res) => {
   try {
     const user = res.locals.user;
-    // Utilisation de res.locals si configuré par le middleware
     // const gameAvailable = false;
     const game = await Game.findOne({
       userId: user.user_id,
@@ -298,9 +238,8 @@ app.get("/me", authenticateToken, async (req, res) => {
       .populate("winnings")
       .sort({ createdAt: "desc" });
 
-    const stockAvailable = await checkStockAvailability(); // Votre logique pour vérifier le stock
+    const stockAvailable = await checkStockAvailability();
 
-    // Si aucune partie active n'est trouvée, renvoyez un état initial prêt à jouer sans sauvegarder dans la DB
     return res.json({
       game,
       message: "Ready to start a new game.",
